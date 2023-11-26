@@ -1,6 +1,4 @@
-const {
-    loadFixture,
-} = require("@nomicfoundation/hardhat-network-helpers");
+const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers");
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
@@ -20,7 +18,7 @@ describe(NAME, function () {
         let victimContract, attackerWallet;
         before(async function () {
             ({ victimContract, attackerWallet } = await loadFixture(setup));
-        })
+        });
 
         it("conduct your attack here", async function () {
             const AttackerFactory = await ethers.getContractFactory("Overmint1_ERC1155_Attacker");
@@ -30,7 +28,10 @@ describe(NAME, function () {
 
         after(async function () {
             expect(await victimContract.balanceOf(attackerWallet.address, 0)).to.be.equal(5);
-            expect(await ethers.provider.getTransactionCount(attackerWallet.address)).to.lessThan(3, "must exploit in two transactions or less");
+            expect(await ethers.provider.getTransactionCount(attackerWallet.address)).to.lessThan(
+                3,
+                "must exploit in two transactions or less"
+            );
         });
     });
 });
