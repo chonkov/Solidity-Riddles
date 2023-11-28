@@ -11,14 +11,14 @@ contract Wallet {
 
     function sendEther(address destination, uint256 amount) public {
         require(msg.sender == forwarder, "sender must be forwarder contract");
-        (bool success, ) = destination.call{value: amount}("");
+        (bool success,) = destination.call{value: amount}("");
         require(success, "failed");
     }
 }
 
 contract Forwarder {
     function functionCall(address a, bytes calldata data) public {
-        (bool success, ) = a.call(data);
+        (bool success,) = a.call(data);
         require(success, "forward failed");
     }
 }
