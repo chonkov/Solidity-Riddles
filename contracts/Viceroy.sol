@@ -16,7 +16,7 @@ contract OligarchyNFT is ERC721 {
 }
 
 contract Governance {
-    IERC721 private immutable oligargyNFT;
+    IERC721 private immutable oligarchyNFT;
     CommunityWallet public immutable communityWallet;
     mapping(uint256 => bool) public idUsed;
     mapping(address => bool) public alreadyVoted;
@@ -37,7 +37,7 @@ contract Governance {
     mapping(uint256 => Proposal) public proposals;
 
     constructor(ERC721 _oligarchyNFT) payable {
-        oligargyNFT = _oligarchyNFT;
+        oligarchyNFT = _oligarchyNFT;
         communityWallet = new CommunityWallet{value: msg.value}(address(this));
     }
 
@@ -47,7 +47,7 @@ contract Governance {
      * @param id: the NFT of the oligarch
      */
     function appointViceroy(address viceroy, uint256 id) external {
-        require(oligargyNFT.ownerOf(id) == msg.sender, "not an oligarch");
+        require(oligarchyNFT.ownerOf(id) == msg.sender, "not an oligarch");
         require(!idUsed[id], "already appointed a viceroy");
         require(viceroy.code.length == 0, "only EOA");
 
@@ -57,7 +57,7 @@ contract Governance {
     }
 
     function deposeViceroy(address viceroy, uint256 id) external {
-        require(oligargyNFT.ownerOf(id) == msg.sender, "not an oligarch");
+        require(oligarchyNFT.ownerOf(id) == msg.sender, "not an oligarch");
         require(viceroys[viceroy].appointedBy == id, "only the appointer can depose");
 
         idUsed[id] = false;
@@ -104,7 +104,7 @@ contract Governance {
 
     function executeProposal(uint256 proposal) external {
         require(proposals[proposal].votes >= 10, "Not enough votes");
-        (bool res, ) = address(communityWallet).call(proposals[proposal].data);
+        (bool res,) = address(communityWallet).call(proposals[proposal].data);
         require(res, "call failed");
     }
 }
@@ -118,7 +118,7 @@ contract CommunityWallet {
 
     function exec(address target, bytes calldata data, uint256 value) external {
         require(msg.sender == governance, "Caller is not governance contract");
-        (bool res, ) = target.call{value: value}(data);
+        (bool res,) = target.call{value: value}(data);
         require(res, "call failed");
     }
 
